@@ -110,17 +110,19 @@ class UNetExperiment(PytorchExperiment):
             pred_softmax = F.softmax(pred, dim=1)  # We calculate a softmax, because our SoftDiceLoss expects that as an input. The CE-Loss does the softmax internally.
 
             loss = self.dice_loss(pred_softmax, target.squeeze()) + self.ce_loss(pred, target.squeeze())
-
+            #loss = self.ce_loss(pred, target.squeeze())
+            #dice cofficent  = -1*diceloss 
+            accuracy = -1*self.dice_loss(pred_softmax, target.squeeze()) 
 
             loss.backward()
             self.optimizer.step()
 
             # Some logging and plotting
             if (batch_counter % self.config.plot_freq) == 0:
-                self.elog.print('Epoch: {0} Loss: {1:.4f}'.format(self._epoch_idx, loss))
+                self.elog.print('Epoch: {0} Loss: {1:.4f} Accuracy : {1:.4f}'.format(self._epoch_idx, loss, accuracy))
 
                 self.add_result(value=loss.item(), name='Train_Loss', tag='Loss', counter=epoch + (batch_counter / self.train_data_loader.data_loader.num_batches))
-
+                self.add_result(value=accuracy.item(), name='Train_Accuracy', tag='Accuracy', counter=epoch + (batch_counter / self.train_data_loader.data_loader.num_batches))
                 self.clog.show_image_grid(data.float().cpu(), name="data", normalize=True, scale_each=True, n_iter=epoch)
                 self.clog.show_image_grid(target.float().cpu(), name="mask", title="Mask", n_iter=epoch)
                 self.clog.show_image_grid(torch.argmax(pred.cpu(), dim=1, keepdim=True), name="unt_argmax", title="Unet", n_iter=epoch)
@@ -136,7 +138,8 @@ class UNetExperiment(PytorchExperiment):
 
         data = None
         loss_list = []
-
+        accuracy_List =[]
+        val_batch_counter = 0  
         with torch.no_grad():
             for data_batch in self.val_data_loader:
                 data = data_batch['data'][0].float().to(self.device)
@@ -144,17 +147,19 @@ class UNetExperiment(PytorchExperiment):
 
                 pred = self.model(data)
                 pred_softmax = F.softmax(pred, dim=1)  # We calculate a softmax, because our SoftDiceLoss expects that as an input. The CE-Loss does the softmax internally.
-
                 loss = self.dice_loss(pred_softmax, target.squeeze()) + self.ce_loss(pred, target.squeeze())
+                #loss = self.ce_loss(pred, target.squeeze()) 
                 loss_list.append(loss.item())
-
+                accuracy = -1*self.dice_loss(pred_softmax, target.squeeze()) 
+                accuracy_List.append(accuracy)
+                val_batch_counter +=1
         assert data is not None, 'data is None. Please check if your dataloader works properly'
         self.scheduler.step(np.mean(loss_list))
 
-        self.elog.print('Epoch: %d Loss: %.4f' % (self._epoch_idx, np.mean(loss_list)))
-
+        self.elog.print('Epoch: %d Loss: %.4f Accuracy: %.4f' % (self._epoch_idx, np.mean(loss_list),np.mean(accuracy_List)))
+        
         self.add_result(value=np.mean(loss_list), name='Val_Loss', tag='Loss', counter=epoch+1)
-
+        self.add_result(value=accuracy.item(), name='Val_Accuracy', tag='Accuracy', counter=epoch + (val_batch_counter /         self.val_data_loader.data_loader.num_batches))
         self.clog.show_image_grid(data.float().cpu(), name="data_val", normalize=True, scale_each=True, n_iter=epoch)
         self.clog.show_image_grid(target.float().cpu(), name="mask_val", title="Mask", n_iter=epoch)
         self.clog.show_image_grid(torch.argmax(pred.data.cpu(), dim=1, keepdim=True), name="unt_argmax_val", title="Unet", n_iter=epoch)
@@ -162,4 +167,37 @@ class UNetExperiment(PytorchExperiment):
 
     def test(self):
         # TODO
-        print('TODO: Implement your test() method here')
+        print(' Inside the test method ')
+        self.elog.print('----Inside Test method----')
+        self.model.eval()
+        testiter = 13 
+
+        data = None
+        loss_list = []
+        accuracy_list = [] 
+        with torch.no_grad():
+            for data_batch in self.test_data_loader:
+                data = data_batch['data'][0].float().to(self.device)
+                target = data_batch['seg'][0].long().to(self.device)
+
+                pred = self.model(data)
+                pred_softmax = F.softmax(pred, dim=1)  # We calculate a softmax, because our SoftDiceLoss expects that as an input. The CE-Loss does the softmax internally.
+                accuracy = -1*self.dice_loss(pred_softmax, target.squeeze())  
+                loss = self.dice_loss(pred_softmax, target.squeeze()) + self.ce_loss(pred, target.squeeze())
+                 
+                loss_list.append(loss.item())
+                accuracy_list.append(accuracy) 
+        assert data is not None, 'data is None. Please check if your dataloader works properly'
+        #self.scheduler.step(np.mean(loss_list))
+
+        self.elog.print('Epoch: %d Loss: %.4f accuracy: %.4f' % (self._epoch_idx, np.mean(loss_list),np.mean(accuracy_list)))
+
+        self.add_result(value=np.mean(loss_list), name='Test_Loss', tag='Loss', counter=testiter)
+        self.add_result(value=np.mean(accuracy_list), name='Test_Accuracy', tag='Accuracy', counter=testiter)
+
+        self.clog.show_image_grid(data.float().cpu(), name="data_Test", normalize=True, scale_each=True, n_iter=testiter)
+        self.clog.show_image_grid(target.float().cpu(), name="mask_Test", title="Mask", n_iter=testiter)
+        self.clog.show_image_grid(torch.argmax(pred.data.cpu(), dim=1, keepdim=True), name="unt_argmax_Test", title="Unet", n_iter=testiter)
+        self.clog.show_image_grid(pred.data.cpu()[:, 1:2, ], name="unt_Test", normalize=True, scale_each=True, n_iter=testiter)
+
+

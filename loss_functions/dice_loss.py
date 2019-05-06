@@ -169,6 +169,26 @@ def soft_dice_per_batch_2(net_output, gt, smooth=1., smooth_in_nom=1., backgroun
     result = (- ((2 * tp + smooth_in_nom) / (2 * tp + fp + fn + smooth)) * weights).mean()
     return result
 
+def soft_dice_per_batch_3(net_output, gt, smooth=1., smooth_in_nom=1., background_weight=1, rebalance_weights=None):
+    if rebalance_weights is not None and len(rebalance_weights) != gt.shape[1]:
+        rebalance_weights = rebalance_weights[1:] # this is the case when use_bg=False
+    axes = tuple([0] + list(range(2, len(net_output.size()))))
+    tp = sum_tensor(net_output * gt, axes, keepdim=False)
+    fn = sum_tensor((1 - net_output) * gt, axes, keepdim=False)
+    fp = sum_tensor(net_output * (1 - gt), axes, keepdim=False)
+    weights = torch.ones(tp.shape)
+    weights[0] = background_weight
+    if net_output.device.type == "cuda":
+        weights = weights.cuda(net_output.device.index)
+    if rebalance_weights is not None:
+        rebalance_weights = torch.from_numpy(rebalance_weights).float()
+        if net_output.device.type == "cuda":
+            rebalance_weights = rebalance_weights.cuda(net_output.device.index)
+        tp = tp * rebalance_weights
+        fn = fn * rebalance_weights
+    result = (-((2 * tp + smooth_in_nom) / (2 * tp + fp + fn + smooth)) * weights).mean()
+    return result
+
 
 def soft_dice(net_output, gt, smooth=1., smooth_in_nom=1.):
     axes = tuple(range(2, len(net_output.size())))

@@ -21,7 +21,7 @@ matplotlib.use('Agg')
 import os
 from os.path import exists
 
-from configs.Config_unet import get_config
+from configs.Config_unet_brain import get_config
 from datasets.example_dataset.create_splits import create_splits
 from datasets.example_dataset.download_dataset import download_dataset
 from datasets.example_dataset.preprocessing import preprocess_data
@@ -34,8 +34,8 @@ if __name__ == "__main__":
 
     if not exists(os.path.join(os.path.join(c.data_root_dir, c.dataset_name), 'preprocessed')):
         print('Preprocessing data. [STARTED]')
-        preprocess_data(root_dir=os.path.join(c.data_root_dir, c.dataset_name), y_shape=c.patch_size, z_shape=c.patch_size)
-        create_splits(output_dir=c.split_dir, image_dir=c.data_dir)
+        #preprocess_data(root_dir=os.path.join(c.data_root_dir, c.dataset_name), y_shape=c.patch_size, z_shape=c.patch_size)
+        #create_splits(output_dir=c.split_dir, image_dir=c.data_dir)
         print('Preprocessing data. [DONE]')
     else:
         print('The data has already been preprocessed. It will not be preprocessed again. Delete the folder to enforce it.')

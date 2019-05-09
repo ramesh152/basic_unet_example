@@ -99,17 +99,16 @@ class UNetExperiment(PytorchExperiment):
         for data_batch in self.train_data_loader:
 
             self.optimizer.zero_grad()
-            print("data shape : ",str(data_batch['data'][0].shape),"target shape :",str( data_batch['seg'][0].shape))
+
             # Shape of data_batch = [1, b, c, w, h]
             # Desired shape = [b, c, w, h]
             # Move data and target to the GPU
             data = data_batch['data'][0].float().to(self.device)
             target = data_batch['seg'][0].long().to(self.device)
-
+            print("data shape : ",str(data.shape ,"target shape :",str(target.shape)))
             pred = self.model(data)
             pred_softmax = F.softmax(pred, dim=1)  # We calculate a softmax, because our SoftDiceLoss expects that as an input. The CE-Loss does the softmax internally.
-            print("pred : ",pred.shape,"data shape : ",data.shape)
-            print("pred_softmax : ",pred_softmax.shape,"target shape : ",target.shape)
+
             loss = self.dice_loss(pred_softmax, target.squeeze()) + self.ce_loss(pred, target.squeeze())
             #loss = self.ce_loss(pred, target.squeeze())
             #dice cofficent  = -1*diceloss 

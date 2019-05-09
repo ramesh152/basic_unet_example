@@ -114,6 +114,7 @@ class SoftDiceLoss(nn.Module):
             y = y.long()
         shp_x = x.shape
         shp_y = y.shape
+        print("shp_x :",shp_x,"shp_y:",shp_y )  
         if self.apply_nonlin is not None:
             x = self.apply_nonlin(x)
         if len(shp_x) != len(shp_y):

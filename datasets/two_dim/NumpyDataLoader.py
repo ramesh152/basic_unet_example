@@ -157,10 +157,11 @@ class NumpyDataLoader(SlimDataLoaderBase):
             fn_name = self.files[slice[0]]
 
             numpy_array = np.load(fn_name, mmap_mode="r")
-
+            print(" type 1:fn_name ",fn_name,type(numpy_array),"numpy_array shape :",numpy_array.shape)
             numpy_slice = numpy_array[ :, slice[1], ]
-            data.append(numpy_slice[None, self.input_slice[0]])   # 'None' keeps the dimension
 
+            data.append(numpy_slice[None, self.input_slice[0]])   # 'None' keeps the dimension
+            #print(" type 2: ",numpy_slice[None, self.input_slice[0]]) 
             if self.label_slice is not None:
                 labels.append(numpy_slice[None, self.label_slice[0]])   # 'None' keeps the dimension
 

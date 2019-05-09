@@ -23,15 +23,16 @@ from trixi.util import Config
 def get_config():
     # Set your own path, if needed.
     #data_root_dir = os.path.abspath('data')  # The path where the downloaded dataset is stored.
-    data_root_dir = "/home/ramesh/Desktop/WS/Implementation/data/MedSegDecathlon"
+    #data_root_dir = "/home/ramesh/Desktop/WS/Implementation/data/MedSegDecathlon"
+    data_root_dir= "/home/ramesh/Desktop/WS/Implementation/data/Brats17"
     c = Config(
         update_from_argv=True,
 
         # Train parameters
-        num_classes=3,
+        num_classes=4,
         in_channels=1,
         batch_size=8,
-        patch_size=64,
+        patch_size=160,
         n_epochs=1,
         learning_rate=0.0002,
         fold=0,  # The 'splits.pkl' may contain multiple folds. Here we choose which one we want to use.
@@ -50,14 +51,14 @@ def get_config():
 
         # Adapt to your own path, if needed.
         google_drive_id='1RzPB1_bqzQhlWvU-YGvZzhx2omcDh38C',
-        dataset_name='Task04_Hippocampus',
+        dataset_name='Brats17',
         base_dir=os.path.abspath('output_experiment'),  # Where to log the output of the experiment.
 
         data_root_dir=data_root_dir,  # The path where the downloaded dataset is stored.
-        data_dir=os.path.join(data_root_dir, 'Task04_Hippocampus/preprocessed'),  # This is where your training and validation data is stored
-        data_test_dir=os.path.join(data_root_dir, 'Task04_Hippocampus/preprocessed'),  # This is where your test data is stored
+        data_dir=os.path.join(data_root_dir, 'Brats17_preprocessed'),  # This is where your training and validation data is stored
+        data_test_dir=os.path.join(data_root_dir, 'Brats17_preprocessed'),  # This is where your test data is stored
 
-        split_dir=os.path.join(data_root_dir, 'Task04_Hippocampus'),  # This is where the 'splits.pkl' file is located, that holds your splits.
+        split_dir=os.path.join(data_root_dir, 'Brats17_preprocessed'),  # This is where the 'splits.pkl' file is located, that holds your splits.
     )
 
     print(c)
